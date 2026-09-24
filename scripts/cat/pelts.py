@@ -16,8 +16,6 @@ class Pelt:
     # POSES
     all_poses = sprites.POSE_DATA["poses"]
     newborn_poses = [x for x in all_poses if "newborn" in x]
-
-    pregnant_poses = [x for x in all_poses if "pregnant" in x]
     
     kitten_short_poses = [
         x
