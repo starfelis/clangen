@@ -16,26 +16,56 @@ class Pelt:
     # POSES
     all_poses = sprites.POSE_DATA["poses"]
     newborn_poses = [x for x in all_poses if "newborn" in x]
-    kitten_poses = [x for x in all_poses if "kitten" in x and "sick" not in x]
-    adolescent_long_poses = [
-        x for x in all_poses if "adolescent_long" in x and "sick" not in x
+
+    pregnant_poses = [x for x in all_poses if "pregnant" in x]
+    
+    kitten_short_poses = [
+        x
+        for x in all_poses
+        if "kitten_short" in x and "sick" not in x
     ]
+
+    kitten_long_poses = [
+        x
+        for x in all_poses
+        if "kitten_long" in x and "sick" not in x
+    ]
+
     adolescent_short_poses = [
         x
         for x in all_poses
-        if "adolescent" in x and "long" not in x and "sick" not in x
+        if "adolescent_short" in x and "sick" not in x
     ]
+
+    adolescent_long_poses = [
+        x
+        for x in all_poses
+        if "adolescent_long" in x and "sick" not in x
+    ]
+    
     adult_short_poses = [
         x
         for x in all_poses
         if "adult_short" in x and "para" not in x and "sick" not in x
     ]
+    
     adult_long_poses = [
         x
         for x in all_poses
         if "adult_long" in x and "para" not in x and "sick" not in x
     ]
-    senior_poses = [x for x in all_poses if "senior" in x and "sick" not in x]
+
+    senior_short_poses = [
+        x
+        for x in all_poses
+        if "senior_short" in x and "para" not in x and "sick" not in x
+    ]
+
+    senior_long_poses = [
+        x
+        for x in all_poses
+        if "senior_long" in x and "para" not in x and "sick" not in x
+    ]
 
     # PELT LENGTH
     pelt_length = ["short", "medium", "long"]
@@ -323,9 +353,14 @@ class Pelt:
                     )
                     continue
                 elif age == CatAge.KITTEN:
+                    if self.length == "long":
+                        fur = "long"
+                    else:
+                        fur = "short"
                     # since these were at the top of the sheet, the pose nums were 0, 1, 2. thus they'll naturally match this fstring
-                    self.cat_sprites[age] = f"kitten{pose if pose in (0, 1, 2) else 0}"
+                    self.cat_sprites[age] = f"kitten_{fur}{pose if pose in (0, 1, 2) else 0}"
                     continue
+                    
                 elif age == CatAge.ADOLESCENT:
                     if self.length == "long":
                         fur = "long"
@@ -369,16 +404,25 @@ class Pelt:
                             )
 
                 elif age == CatAge.SENIOR:
+                    if self.length =="long":
+                        fur = "long"
+                    else:
+                        fur = "short"
                     if pose in (3, 12):
-                        self.cat_sprites[age] = "senior0"
+                        self.cat_sprites[age] = f"senior_{fur}0"
                     elif pose in (4, 13):
-                        self.cat_sprites[age] = "senior1"
+                        self.cat_sprites[age] = f"senior_{fur}1"
                     elif pose in (5, 14):
-                        self.cat_sprites[age] = "senior2"
+                        self.cat_sprites[age] = f"senior_{fur}2"
                     else:
                         self.cat_sprites[age] = choice(
-                            ("senior0", "senior1", "senior2")
+                            (
+                                f"senior_{fur}0",
+                                f"senior_{fur}1",
+                                f"senior_{fur}2"
+                            )
                         )
+
 
         # now for the updating handling of pose name strings
         else:
@@ -398,12 +442,22 @@ class Pelt:
                 else:
                     adol_sprite = f"adolescent_short{adol_sprite[-1]}"
 
+            if kitten_sprite in ("kitten0", "kitten1", "kitten2"):
+                if self.length == "long":
+                    kitten_sprite = random.choice(self.kitten_long_poses)
+                else:
+                    kitten_sprite = f"kitten_short{kitten_sprite[-1]}"
+
             self.cat_sprites = {
                 "newborn": newborn_sprite
                 if newborn_sprite is not None and newborn_sprite in self.newborn_poses
                 else "newborn0",
                 "kitten": kitten_sprite
-                if kitten_sprite is not None and kitten_sprite in self.kitten_poses
+                if kitten_sprite is not None
+                and (
+                    kitten_sprite in self.kitten_short_poses
+                    or kitten_sprite in self.kitten_long_poses
+                )
                 else "kitten0",
                 "adolescent": adol_sprite
                 if adol_sprite is not None
@@ -416,7 +470,11 @@ class Pelt:
                 "adult": adult_sprite,
                 "senior adult": adult_sprite,
                 "senior": senior_sprite
-                if senior_sprite is not None and senior_sprite in self.senior_poses
+                if senior_sprite is not None
+                and (
+                    senior_sprite in self.senior_short_poses
+                    or senior_sprite in self.senior_long_poses
+                )
                 else "senior0",
                 "para_adult": para_adult_sprite
                 if para_adult_sprite is not None
@@ -892,8 +950,6 @@ class Pelt:
     def init_sprite(self):
         self.cat_sprites = {
             "newborn": random.choice(self.newborn_poses),
-            "kitten": random.choice(self.kitten_poses),
-            "senior": random.choice(self.senior_poses),
             "para_young": "para_young0",
         }
         self.reverse = bool(random.getrandbits(1))
@@ -901,6 +957,11 @@ class Pelt:
         self.skin = choice(Pelt.skin_sprites)
 
         if self.length == "long":
+            self.cat_sprites["kitten"] = random.choice(
+                self.kitten_long_poses
+                if self.kitten_long_poses
+                else self.kitten_short_poses
+            )
             self.cat_sprites["adolescent"] = random.choice(
                 self.adolescent_long_poses
                 if self.adolescent_long_poses
@@ -911,10 +972,17 @@ class Pelt:
                 if self.adult_long_poses
                 else self.adult_short_poses
             )
+            self.cat_sprites["senior"] = random.choice(
+                self.senior_long_poses
+                if self.senior_long_poses
+                else self.senior_short_poses
+            )
             self.cat_sprites["para_adult"] = "para_adult_long0"
         else:
+            self.cat_sprites["kitten"] = random.choice(self.kitten_short_poses)
             self.cat_sprites["adolescent"] = random.choice(self.adolescent_short_poses)
             self.cat_sprites["adult"] = random.choice(self.adult_short_poses)
+            self.cat_sprites["senior"] = random.choice(self.senior_short_poses)
             self.cat_sprites["para_adult"] = "para_adult_short0"
 
         self.cat_sprites["young adult"] = self.cat_sprites["adult"]
